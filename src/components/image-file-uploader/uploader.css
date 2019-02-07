@@ -79,14 +79,20 @@
     margin-bottom: 10px;
   }
 
+  .image-container {
+    margin: 15px;
+  }
+
   .previewImage{
     position: relative;
     display: inline-flex;
     justify-content: center;
-    width: 90px;
     padding:5px;
-    height: 80px;
     border: 1px solid #ccc;
+}
+
+.previewImage img {
+  object-fit: contain;
 }
 
 .previewImage .overlay{

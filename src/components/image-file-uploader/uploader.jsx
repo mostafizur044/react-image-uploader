@@ -1,11 +1,12 @@
 import React, { Component } from "react";
 import InputFile from "./inputFile";
+import Preview from "./preview";
 import "./uploader.css";
 
 class Uploader extends Component {
   state = {
+    fileInput: "",
     filesToUpload: [],
-    filesPreview: [],
     imagePreview: [],
     backColor: "",
     hoverClass: ""
@@ -22,47 +23,62 @@ class Uploader extends Component {
     this.setState({ backColor, hoverClass });
   };
 
-  handelInput = (file) => {
-      console.log(file.currentTarget.files)
-      const files = file.currentTarget.files;
-      if(files){
-        if(this.props.multi){
-          this.multiFile(files);
-        } else { 
-          this.clear();
-          this.imageView(files[0]);
-        }
+  handelInput = file => {
+    const files = file.currentTarget.files;
+    if (files) {
+      if (this.props.multi) {
+        this.multiFile(files);
+      } else {
+        this.clearAll();
+        this.imageView(files[0]);
       }
-  }
+    }
+    console.log(this.state);
+  };
 
-  multiFile(file){
-    for(let i of file){
+  multiFile(file) {
+    for (let i of file) {
       this.imageView(i);
     }
   }
 
-  clear() {
-    // this.filesToUpload = [];
-    // this.imagePreview = [];
-    // this.filesPreview = [];
-    // this.loader = null;
+  clearAll = () => {
+    this.setState({
+      filesToUpload: [],
+      imagePreview: []
+    });
+  };
+
+  imageView(i) {
+    const { filesToUpload } = this.state;
+    filesToUpload.push(i);
+    this.setState({ filesToUpload });
+    if (i.type.includes("image/")) {
+      let reader = new FileReader();
+      reader.onload = e => {
+        this.pushImagePreview(reader.result);
+      };
+      reader.readAsDataURL(i);
+    } else {
+      this.pushImagePreview(i)
+    }
   }
 
-  imageView(i){ 
-    // const {imagePreview} = this.state;
-    // imagePreview.push(i);
-    // this.setState({imagePreview});
-    let reader = new FileReader();
-    reader.onload =  (e)=>{
-        const {imagePreview} = this.state;
-        imagePreview.push(reader.result);
-        this.setState({imagePreview});
-    };
-    reader.readAsDataURL(i);
+  pushImagePreview(data) {
+    const { imagePreview } = this.state;
+    imagePreview.push(data);
+    this.setState({ imagePreview });
   }
+
+  handelRemove = index => {
+    let { imagePreview, filesToUpload } = this.state;
+    imagePreview = imagePreview.filter((img, i) => i !== index);
+    filesToUpload = filesToUpload.filter((img, i) => i !== index);
+    this.setState({ imagePreview, filesToUpload });
+  };
 
   render() {
-    const { multi, accept, height, width } = this.props;
+    const { multi, accept, height, width, url, data, limit } = this.props;
 
     return (
       <section>
@@ -82,15 +98,26 @@ class Uploader extends Component {
                 handelInput={this.handelInput}
                 handelDragEnd={this.handelDragEnd}
                 handelDragEnter={this.handelDragEnter}
+                value={this.state.fileInput}
+                accept={accept}
               />
             ) : (
               <InputFile
                 handelInput={this.handelInput}
                 handelDragEnd={this.handelDragEnd}
                 handelDragEnter={this.handelDragEnter}
+                value={this.state.fileInput}
+                accept={accept}
               />
             )}
           </div>
+
+          <Preview
+            imagePreview={this.state.imagePreview}
+            width={width}
+            height={height}
+            removeFile={this.handelRemove}
+          />
 
           <div className="text-center upload-btn">
             {/* <div>
@@ -117,33 +144,11 @@ class Uploader extends Component {
             <button
               type="button"
               className="btn btn-sm btn-custom-reset"
-              // onClick="clear()"
+              onClick={this.clearAll}
             >
               <span>Reset</span>
             </button>
           </div>
-        </div>
-
-        <div className="image-container">
-          {this.state.imagePreview.map( (img, i) => {
-            return (
-              <div
-                key={i}
-                className="previewImage"
-                // style={{ width: width + "px", height: height + "px" }}
-              >
-                <img src={img} width={width ? width - 10 : 80} />
-                <div className="overlay">
-                  <span
-                    className="btn btn-sm btn-custom-reset"
-                    // onClick="removeFile(i)"
-                  >
-                    <i className="fa fa-times" />
-                  </span>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </section>
     );
